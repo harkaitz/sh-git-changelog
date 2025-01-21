@@ -1,0 +1,96 @@
+#!/bin/sh -e
+##:
+#h: Usage: wds_nextver { -M (major) | -m (minor) | -p (patch) }
+#h:
+#h: Increase the VERSION in the makefile by one.
+#h: When no arguments are given it simply prints the version. If there's
+#h: a "v.LANG" type target it is generated.
+#h:
+#h: Version scheme: MAJOR.MINOR.PATCH
+##:
+wds_nextver() {
+    local i_major= i_minor= i_patch= v1= v2= v3= MAKEFILE= VERSION= VERFILE=
+    case "$1" in -*M*) i_major=y;; esac
+    case "$1" in -*m*) i_minor=y;; esac
+    case "$1" in -*p*) i_patch=y;; esac
+    case "$1" in -*)   shift;; esac
+    
+    wds_nextver_get_MAKEFILE
+    wds_nextver_get_VERSION
+    
+    local IFS="."
+    read -r v1 v2 v3 ign <<-EOF
+	${VERSION}
+	EOF
+    unset IFS
+    
+    v1="${v1:-0}" v2="${v2:-0}" v3="${v3:-0}"
+    if test -n "${i_major}"; then
+        v1=$(( v1 + 1))
+    fi
+    if test -n "${i_minor}"; then
+        v2=$(( v2 + 1))
+    fi
+    if test -n "${i_patch}"; then
+        v3=$(( v3 + 1))
+    fi
+    if test ! -n "${i_major}${i_minor}${i_patch}"; then
+        echo "${v1}.${v2}.${v3} (increase with -Mmp)"
+        return 0
+    fi
+    
+    echo "Setting VERSION=${v1}.${v2}.${v3} in ${MAKEFILE} ..."
+    sed -i "/^\s*VERSION\s*=/s|=.*|=${v1}.${v2}.${v3}|" "${MAKEFILE}"
+    
+    wds_nextgen_get_VERFILE
+    if test -n "${VERFILE}"; then
+        echo "Running \"gmake ${VERFILE}\" ..."
+        gmake "${VERFILE}"
+    fi
+    
+    return 0
+}
+wds_nextver_get_VERSION() {
+    local MAKEFILE
+    wds_nextver_get_MAKEFILE "$1"
+    VERSION="$(sed -n 's|^\s*VERSION\s*:*= *||p' "${MAKEFILE}")"
+    if test ! -n "${VERSION}"; then
+        echo >&2 "error: The makefile hasn't a VERSION variable."
+        return 1
+    fi
+}
+wds_nextver_get_PROJECT() {
+    local MAKEFILE
+    wds_nextver_get_MAKEFILE "$1"
+    PROJECT="$(sed -n 's|^\s*PROJECT\s*:*= *||p' "${MAKEFILE}")"
+    if test ! -n "${PROJECT}"; then
+        echo >&2 "error: The makefile hasn't a PROJECT variable."
+        return 1
+    fi
+}
+wds_nextgen_get_VERFILE() {
+    local MAKEFILE
+    wds_nextver_get_MAKEFILE
+    VERFILE="$(sed -n 's|^\(v\.[^: ]*\) *:.*|\1|p' "${MAKEFILE}")"
+}
+wds_nextver_get_MAKEFILE() {
+    local d="${1:-.}"
+    if test -n "${MAKEFILE}"; then
+        true
+    elif test -f "$d/Makefile"; then
+        MAKEFILE="$d/Makefile"
+    elif test -f "$d/GNUmakefile"; then
+        MAKEFILE="$d/GNUmakefile"
+    else
+        echo >&2 "error: No makefile found."
+        return 1
+    fi
+}
+## -------------------------------------------------------------------
+if test @"${SCRNAME:-$(basename "$0")}" = @"wds_nextver"; then
+    case "${1}" in
+        -h|--help) sed -n 's/^ *#h: \{0,1\}//p' "$0";;
+        --match)   wds_nextver_get_VERSION "$2";;
+        *)         wds_nextver "$@"; exit 0;;
+    esac
+fi
