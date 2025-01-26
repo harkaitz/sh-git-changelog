@@ -23,6 +23,6 @@ install-license: README.md COPYING
 install: install-sh
 install-sh:
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
-	cp bin/git-changelog $(DESTDIR)$(PREFIX)/bin
 	cp bin/wds_nextver $(DESTDIR)$(PREFIX)/bin
+	cp bin/wds_changelog $(DESTDIR)$(PREFIX)/bin
 ## -- BLOCK:sh --

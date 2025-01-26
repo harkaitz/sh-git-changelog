@@ -5,23 +5,16 @@ Update changelogs using git-task(1) tasks.
 
 ## Help
 
-git-changelog
+wds_changelog
 
     Usage: git-changelog { -V | -a (add) | -c (close) | -u (update) }
     
-    Program for automatically filling the changelog from git-task(1)
-    tasks. The format of the changelog is as follows:
-      __________________________________
-     | YYYY-MM-DD  VERSION  TEXT (open) | * The updated section is 
-     |                                  |   the last one with (open).
-     | [ tab  ]- (@CODE) MESSAGE        | 
-     | [ tab  ]- (@CODE) MESSAGE        | * The version or an open section
-     | ...                              |   matches the version in the makefile.
-     |__________________________________|
-    
-    Tasks that contain "Changelog" with the same project name in the
-    makefile and that are "@done" are selected. Move to @closed once
-    the release is done.
+    Fill the CHANGELOG.md file with done tasks in git-task(1).
+     ______________________________
+    | YYYY-MM-DD  VER  TEXT (open) | Reads PROJECT, VERSION from Makefile
+    |                              | and searches @done tasks that Changelog
+    | [ tab  ]- (@CODE) MESSAGE    | is PROJECT.
+    |______________________________|
 
 wds_nextver
 

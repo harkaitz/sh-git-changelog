@@ -2,19 +2,12 @@
 ##:
 #h: Usage: git-changelog { -V | -a (add) | -c (close) | -u (update) }
 #h:
-#h: Program for automatically filling the changelog from git-task(1)
-#h: tasks. The format of the changelog is as follows:
-#h:   __________________________________
-#h:  | YYYY-MM-DD  VERSION  TEXT (open) | * The updated section is 
-#h:  |                                  |   the last one with (open).
-#h:  | [ tab  ]- (@CODE) MESSAGE        | 
-#h:  | [ tab  ]- (@CODE) MESSAGE        | * The version or an open section
-#h:  | ...                              |   matches the version in the makefile.
-#h:  |__________________________________|
-#h:
-#h: Tasks that contain "Changelog" with the same project name in the
-#h: makefile and that are "@done" are selected. Move to @closed once
-#h: the release is done.
+#h: Fill the CHANGELOG.md file with done tasks in git-task(1).
+#h:  ______________________________
+#h: | YYYY-MM-DD  VER  TEXT (open) | Reads PROJECT, VERSION from Makefile
+#h: |                              | and searches @done tasks that Changelog
+#h: | [ tab  ]- (@CODE) MESSAGE    | is PROJECT.
+#h: |______________________________|
 ##:
 . wds_nextver
 git_changelog() {
@@ -139,11 +132,20 @@ git_changelog_has_version() {
 	EOF
 }
 # --------------------------------------------------------------------
+git_changelog_match() {
+    if test -f "${2:-.}/CHANGELOG.md"; then
+        return 0
+    else
+        return 1
+    fi
+}
+# --------------------------------------------------------------------
 git_changelog_calc_variables
-if test @"${SCRNAME:-$(basename "$0")}" = @"git-changelog"; then
+if test @"${SCRNAME:-$(basename "$0")}" = @"wds_changelog"; then
     case "${1}" in
         ''|-h|--help) sed -n 's/^ *#h: \{0,1\}//p' "$0";;
         -*V*)         git_changelog_show_variables; exit 0;;
+        --match)      git_changelog_match "$2"; exit 0;;
         *)            git_changelog "$@"; exit 0;;
     esac
 fi
